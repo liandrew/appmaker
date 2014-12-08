@@ -1,0 +1,181 @@
+<polymer-element name="ceci-tts" attributes="text fontsize textalign language textcolor backgroundcolor loop source speed label value buttoncolor volume"
+  textalign="left"
+  language="en"
+  fontsize="16"
+  textcolor="#666666"
+  backgroundcolor="#FFFFFF"
+  extends="ceci-element"
+  volume="0.5"
+  loop="false"
+  buttoncolor="#2181cb"
+  speed="1.0">
+  <ceci-definition>
+    {
+      "tags": ["sound", "audio", "music"],
+      "thumbnail": "./thumbnail.png",
+      "description": "Converts text into audio and plays it",
+      "name": "Text To Speech",
+      "broadcasts": {},
+      "listeners": {
+        "setValue": {
+          "description": "Set value text box",
+          "label": "Set Text"
+        },
+        "play": {
+          "description": "Play the audio clip.",
+          "label": "Play"
+        },
+        "pause": {
+          "description": "Pause the audio clip.",
+          "label": "Pause"
+        },
+        "stopsound": {
+          "description": "Stop the audio clip.",
+          "label": "Stop"
+        }
+      },
+      "attributes": {
+        "text": {
+          "label": "Text",
+          "description": "The text that shows up in the box.",
+          "editable": "textarea"
+        },
+        "language": {
+          "label": "Language",
+          "description": "Select Language",
+          "editable": "select",
+          "options": {"English (United States)":"en-US", "English (Britain)": "en-GB", "Spanish":"ES", "French (Canada)":"fr-CA", "French (France)":"fr-FR", "German":"DE", "Hebrew":"IW", "Italian":"IT", "Japanese":"JA", "Korean":"KO", "Chinese (Mandarin)":"zh-CN", "Chinese (Cantonese)":"zh-YUE", "Arabic":"AR", "Czech":"CS", "Danish":"DA", "Dutch":"NL", "Finnish":"FI", "Greek":"EL", "Hindi":"HI", "Hungarian":"HU", "Indonesian":"ID", "Norwegian":"NO", "Polish":"PL", "Portuguese (Brazil)":"pt-BR", "Portuguese (Portugal)":"pt-PT", "Romanian":"RO", "Russian":"RU", "Slovak":"SK", "Swedish":"SV", "Thai":"TH", "Turkish":"TR"}
+        },
+        "textalign": {
+          "label": "Text Alignment",
+          "description": "Text Alignment",
+          "editable": "select",
+          "options": {"Left":"Left","Center":"Center","Right": "Right"}
+        },
+        "fontsize": {
+          "label": "Font Size",
+          "description": "Font Size",
+          "editable": "range",
+          "min" : "4",
+          "max" : "50"
+        },
+        "volume": {
+          "label": "Volume",
+          "description": "How loud do you want it to be?",
+          "editable": "range",
+          "step" : ".01",
+          "min" : 0,
+          "max" : 1
+        },
+        "loop": {
+          "label": "Loop",
+          "description": "Loop the audio clip when it finishes.",
+          "editable": "boolean"
+        },
+        "speed": {
+          "label": "Playback speed",
+          "description": "1 for normal speed, 2 for double speed.",
+          "editable": "range",
+          "step" : ".01",
+          "min" : ".5",
+          "max" : "4",
+          "listener" : true
+        },
+        "label": {
+          "label": "Speak",
+          "description": "Text shown on the tape."
+        },
+        "buttoncolor": {
+          "label": "Button Color",
+          "description": "What's your favorite?",
+          "editable": "color"
+        }
+      }
+    }
+  </ceci-definition>
+  <template>
+    <link rel="stylesheet" href="component.css"></link>
+    <p style="text-align: {{textalign}}; font-size: {{fontsize}}px; background: {{backgroundcolor}}; color: {{textcolor}}" id="textBox">{{text}}</p>
+        <div id="wrapper" on-ceci-pressdown="{{play}}" class="wrapper">
+      <div class="label">
+        <div class="text">Play</div>
+      </div>
+    <audio id="sound" src="http://translate.google.com/translate_tts?ie=UTF-8&tl=en&q=" preload="auto"></audio>
+    <shadow></shadow>
+  </template>
+  <script>
+    Polymer('ceci-tts', {
+      ready: function () {
+        this.super();
+        this.$.engine = "http://translate.google.com/translate_tts?ie=UTF-8&";
+        var that = this;
+        this.$.sound.addEventListener("ended",function(){
+          that.stopsound();
+          if(that.loop === "true"){
+            that.play();
+          }
+        });
+      },
+      setValue: function(e) {
+        this.text = e;
+      },
+      state : "stopped",
+      stopsound : function(){
+        this.$.sound.pause();
+        this.$.sound.currentTime = 0;
+        this.$.wrapper.classList.remove("playing");
+        this.state = "stopped";
+      },
+      play: function() {
+        var readyState = this.$.sound.readyState;
+        if(readyState != 0) {
+          this.$.wrapper.classList.add("playing");
+          if(this.state == "paused") {
+            this.$.sound.play();
+            this.state = "playing";
+          } else {
+            this.$.sound.pause();
+            this.$.sound.currentTime = 0;
+            this.$.sound.play();
+            this.state = "playing";
+          }
+        } else {
+          this.$.wrapper.classList.remove("cantplay");
+          this.$.wrapper.offsetWidth = this.$.wrapper.offsetWidth;
+          this.$.wrapper.classList.add("cantplay");
+        }
+      },
+      pause : function(){
+        this.$.wrapper.classList.remove("playing");
+        this.$.sound.pause();
+        this.state = "paused";
+      },
+      textChanged: function(oldValue, newValue) {
+        var rate = this.$.sound.playbackRate;
+        this.$.sound.playbackRate = rate;
+        this.$.sound.src =  this.$.engine + "tl=" + this.$.language + "&q=" + this.text;
+      },
+      languageChanged: function(oldValue, newValue) {
+         this.$.language = newValue;
+         this.$.sound.src =  this.$.engine + "tl=" + this.$.language + "&q=" + this.text;
+      },
+      setSpeed: function(channel, value) {
+        this.speedChanged(this.$.sound.playbackRate || 1, value);
+      },
+      volumeChanged : function(oldValue, newValue){
+        this.$.sound.volume = newValue;
+      },
+      buttoncolorChanged: function (oldValue, newValue) {
+        this.$.wrapper.style.background = newValue;
+      },
+      speedChanged: function(oldValue, newValue) {
+        try  {
+          var f = parseFloat(newValue);
+          if (f) {
+            this.$.sound.playbackRate = parseFloat(newValue);
+          }
+        } catch (e) {}
+      }
+    });
+  </script>
+</polymer-element>

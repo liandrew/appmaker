@@ -1,0 +1,14 @@
+:host {
+  display: block;
+  width: 100%;
+  -moz-box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+}
+
+:host p {
+  padding: 10px;
+  white-space: pre-wrap;
+  overflow: hidden;
+  margin: 0;
+  line-height: auto;
+}

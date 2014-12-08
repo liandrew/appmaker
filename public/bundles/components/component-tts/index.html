@@ -1,0 +1,18 @@
+<html>
+  <head>
+    <title>Test Speech</title>
+
+    <script>
+      function speak() {
+        var message = new SpeechSynthesisUtterance(‘Hello World!’);
+
+        window.speechSynthesis.speak(message);
+     }
+    </script>
+  </head>
+
+  <body>
+     <button type="button" onclick="speak()">Click Me!</button>
+  </body>
+</html>
+

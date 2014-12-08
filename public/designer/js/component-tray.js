@@ -92,6 +92,7 @@ var categories = {
     "description": L10n.get("Add a little whimsy to your app."),
     "bricks": [
       "ceci-audio",
+      "ceci-tts",
       "ceci-cowbell",
       "ceci-snaredrum",
       "ceci-kickdrum",
