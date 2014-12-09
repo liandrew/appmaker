@@ -1,10 +1,10 @@
 {
   "ceci-tts": "Text To Speech",
-  "ceci-tts/description": "Converts text into an audio clip using Google Translate",
+  "ceci-tts/description": "Converts text to speech",
   "ceci-tts/attributes/volume/label": "Volume",
   "ceci-tts/attributes/volume/description": "How loud do you want it to be?",
   "ceci-tts/attributes/loop/label": "Loop",
-  "ceci-tts/attributes/loop/description": "Loop the audio clip when it finishes.",
+  "ceci-tts/attributes/loop/description": "Loop the speech utterance when it finishes speaking.",
   "ceci-tts/attributes/speed/label": "Playback speed",
   "ceci-tts/attributes/speed/description": "1 for normal speed, 2 for double speed.",
   "ceci-tts/attributes/buttoncolor/label": "Button Color",

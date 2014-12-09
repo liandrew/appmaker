@@ -12,3 +12,18 @@
   margin: 0;
   line-height: auto;
 }
+
+:host .text {
+  z-index: 2;
+  padding: 12px;
+  font-size: 18px;
+  font-weight: 100;
+  text-overflow: ellipsis;
+  text-align: center;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+:host .highlight {
+  background-color:yellow;
+}

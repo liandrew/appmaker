@@ -1,19 +1,19 @@
-<polymer-element name="ceci-tts" attributes="text fontsize textalign language textcolor backgroundcolor loop source speed label value buttoncolor volume"
+<polymer-element name="ceci-tts" attributes="text fontsize textalign language textcolor backgroundcolor loop speed value buttoncolor volume"
+  extends="ceci-element"
+  fontsize="16"
   textalign="left"
   language="en"
-  fontsize="16"
   textcolor="#666666"
   backgroundcolor="#FFFFFF"
-  extends="ceci-element"
-  volume="0.5"
   loop="false"
+  speed="1.0"
   buttoncolor="#2181cb"
-  speed="1.0">
+  volume="0.5">
   <ceci-definition>
     {
-      "tags": ["sound", "audio", "music"],
+      "tags": ["sound", "audio", "text", "input"],
       "thumbnail": "./thumbnail.png",
-      "description": "Converts text into audio and plays it",
+      "description": "Converts text to speech",
       "name": "Text To Speech",
       "broadcasts": {},
       "listeners": {
@@ -21,16 +21,16 @@
           "description": "Set value text box",
           "label": "Set Text"
         },
-        "play": {
-          "description": "Play the audio clip.",
-          "label": "Play"
+        "speak": {
+          "description": "Speak utterance.",
+          "label": "Speak"
         },
         "pause": {
-          "description": "Pause the audio clip.",
+          "description": "Pause utterance.",
           "label": "Pause"
         },
-        "stopsound": {
-          "description": "Stop the audio clip.",
+        "stop": {
+          "description": "Stop utterance.",
           "label": "Stop"
         }
       },
@@ -44,7 +44,15 @@
           "label": "Language",
           "description": "Select Language",
           "editable": "select",
-          "options": {"English (United States)":"en-US", "English (Britain)": "en-GB", "Spanish":"ES", "French (Canada)":"fr-CA", "French (France)":"fr-FR", "German":"DE", "Hebrew":"IW", "Italian":"IT", "Japanese":"JA", "Korean":"KO", "Chinese (Mandarin)":"zh-CN", "Chinese (Cantonese)":"zh-YUE", "Arabic":"AR", "Czech":"CS", "Danish":"DA", "Dutch":"NL", "Finnish":"FI", "Greek":"EL", "Hindi":"HI", "Hungarian":"HU", "Indonesian":"ID", "Norwegian":"NO", "Polish":"PL", "Portuguese (Brazil)":"pt-BR", "Portuguese (Portugal)":"pt-PT", "Romanian":"RO", "Russian":"RU", "Slovak":"SK", "Swedish":"SV", "Thai":"TH", "Turkish":"TR"}
+          "options": {"English (United States)":"en-US", "English (Britain)": "en-GB", "Spanish":"es-ES",
+                            "French (Canada)":"fr-CA", "French (France)":"fr-FR", "German":"de-DE",
+                            "Hebrew":"he-IL", "Italian":"it-IT", "Japanese":"ja-JP", "Korean":"ko-KR",
+                            "Chinese (Mandarin)":"zh-CN", "Chinese (Cantonese)":"zh-YUE", "Arabic":"ar-SA",
+                            "Czech":"cs-CZ", "Danish":"da-DK", "Dutch (Belgium)":"nl-BE", "Dutch (Netherlands)":"nl-NL",
+                            "Finnish":"fi-FI", "Greek":"el-GR", "Hindi":"hi-IN", "Hungarian":"hu-HU", "Indonesian":"id-ID",
+                            "Norwegian":"nb-NO", "Polish":"pl-PL", "Portuguese (Brazil)":"pt-BR", "Portuguese (Portugal)":"pt-PT",
+                            "Romanian":"ro-RO", "Russian":"ru-RU", "Slovak":"sk-SK", "Swedish (Finland)":"sv-FI",
+                            "Swedish (Sweden)":"sv-SE", "Thai":"th-TH", "Turkish":"tr-TR"}
         },
         "textalign": {
           "label": "Text Alignment",
@@ -64,8 +72,9 @@
           "description": "How loud do you want it to be?",
           "editable": "range",
           "step" : ".01",
-          "min" : 0,
-          "max" : 1
+          "min" : 0.1,
+          "max" : 1,
+          "listener" : true
         },
         "loop": {
           "label": "Loop",
@@ -78,12 +87,8 @@
           "editable": "range",
           "step" : ".01",
           "min" : ".5",
-          "max" : "4",
+          "max" : "3",
           "listener" : true
-        },
-        "label": {
-          "label": "Speak",
-          "description": "Text shown on the tape."
         },
         "buttoncolor": {
           "label": "Button Color",
@@ -96,83 +101,109 @@
   <template>
     <link rel="stylesheet" href="component.css"></link>
     <p style="text-align: {{textalign}}; font-size: {{fontsize}}px; background: {{backgroundcolor}}; color: {{textcolor}}" id="textBox">{{text}}</p>
-        <div id="wrapper" on-ceci-pressdown="{{play}}" class="wrapper">
+        <div id="wrapper" on-ceci-pressdown="{{speak}}" class="wrapper">
       <div class="label">
-        <div class="text">Play</div>
+        <div class="text">Press to hear</div>
       </div>
-    <audio id="sound" src="http://translate.google.com/translate_tts?ie=UTF-8&tl=en&q=" preload="auto"></audio>
     <shadow></shadow>
   </template>
   <script>
     Polymer('ceci-tts', {
       ready: function () {
         this.super();
-        this.$.engine = "http://translate.google.com/translate_tts?ie=UTF-8&";
+        this.$.utterance = new SpeechSynthesisUtterance();
+        this.$.prevIndex = "";
+        this.$.curIndex = "";
+        this.$.container = this.shadowRoot.querySelector("#textBox");
         var that = this;
-        this.$.sound.addEventListener("ended",function(){
-          that.stopsound();
-          if(that.loop === "true"){
-            that.play();
+        this.$.utterance.addEventListener("end",function(e) {
+          that.highlightWord(e);
+          that.stop();
+          that.$.prevIndex = '';
+          that.$.curIndex = '';
+          if(that.loop === "true") {
+            that.speak();
+          }
+        });
+        this.$.utterance.addEventListener("boundary",function(e) {
+          if(e.charIndex > 0 ) {
+            that.highlightWord(e);
           }
         });
       },
+      highlightWord: function(e) {
+        innerHTML = this.$.container.innerHTML =  this.text;
+        if(this.state != "stopped"){
+          this.$.prevIndex = this.$.curIndex;
+          if(e.charIndex === 0) {
+            this.$.curIndex = this.text.length;
+          }else{
+            this.$.curIndex = e.charIndex;
+          }
+          var highlightWordLength =  (this.$.curIndex - this.$.prevIndex);
+          this.$.container.innerHTML = innerHTML.substring(0, this.$.prevIndex )
+                                             + "<span class='highlight'>"
+                                             + innerHTML.substring(this.$.prevIndex,this.$.prevIndex+highlightWordLength)
+                                             + "</span>"
+                                             + innerHTML.substring(this.$.prevIndex + highlightWordLength);
+        }
+      },
       setValue: function(e) {
         this.text = e;
+        this.$.container.innerHTML =  this.text;
       },
       state : "stopped",
-      stopsound : function(){
-        this.$.sound.pause();
-        this.$.sound.currentTime = 0;
-        this.$.wrapper.classList.remove("playing");
+      stop : function() {
+        speechSynthesis.cancel();
         this.state = "stopped";
       },
-      play: function() {
-        var readyState = this.$.sound.readyState;
-        if(readyState != 0) {
-          this.$.wrapper.classList.add("playing");
+      speak: function(){
+        if ( ('speechSynthesis' in window) ) {
           if(this.state == "paused") {
-            this.$.sound.play();
-            this.state = "playing";
-          } else {
-            this.$.sound.pause();
-            this.$.sound.currentTime = 0;
-            this.$.sound.play();
-            this.state = "playing";
+            speechSynthesis.resume();
+            this.state = "speaking";
+          } else if(this.state == "stopped") {
+            this.$.utterance.text = this.text;
+            this.$.utterance.lang = this.$.language;
+            speechSynthesis.speak(this.$.utterance);
+            this.state = "speaking";
           }
-        } else {
-          this.$.wrapper.classList.remove("cantplay");
-          this.$.wrapper.offsetWidth = this.$.wrapper.offsetWidth;
-          this.$.wrapper.classList.add("cantplay");
         }
       },
       pause : function(){
-        this.$.wrapper.classList.remove("playing");
-        this.$.sound.pause();
-        this.state = "paused";
-      },
-      textChanged: function(oldValue, newValue) {
-        var rate = this.$.sound.playbackRate;
-        this.$.sound.playbackRate = rate;
-        this.$.sound.src =  this.$.engine + "tl=" + this.$.language + "&q=" + this.text;
+        if(this.state == "speaking") {
+          speechSynthesis.pause();
+          this.state = "paused";
+        }
       },
       languageChanged: function(oldValue, newValue) {
          this.$.language = newValue;
-         this.$.sound.src =  this.$.engine + "tl=" + this.$.language + "&q=" + this.text;
+      },
+      textChanged: function(e) {
+        this.$.container.innerHTML =  this.text;
       },
       setSpeed: function(channel, value) {
-        this.speedChanged(this.$.sound.playbackRate || 1, value);
+        this.speedChanged(this.$.utterance.rate || 1, value);
       },
-      volumeChanged : function(oldValue, newValue){
-        this.$.sound.volume = newValue;
+      volumeChanged : function(oldValue, newValue) {
+         this.volumeChanged(this.$.utterance.volume || 1, value);
       },
       buttoncolorChanged: function (oldValue, newValue) {
         this.$.wrapper.style.background = newValue;
+      },
+      volumeChanged: function(oldValue, newValue) {
+        try  {
+          var f = parseFloat(newValue);
+          if (f) {
+            this.$.utterance.volume = parseFloat(newValue);
+          }
+        } catch (e) {}
       },
       speedChanged: function(oldValue, newValue) {
         try  {
           var f = parseFloat(newValue);
           if (f) {
-            this.$.sound.playbackRate = parseFloat(newValue);
+            this.$.utterance.rate = parseFloat(newValue);
           }
         } catch (e) {}
       }
