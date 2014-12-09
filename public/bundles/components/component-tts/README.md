@@ -1,2 +1,2 @@
-component-audio
+component-tts
 ===============
