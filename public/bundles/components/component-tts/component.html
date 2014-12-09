@@ -2,7 +2,7 @@
   extends="ceci-element"
   fontsize="16"
   textalign="left"
-  language="en"
+  language="en-US"
   textcolor="#666666"
   backgroundcolor="#FFFFFF"
   loop="false"
@@ -47,7 +47,7 @@
           "options": {"English (United States)":"en-US", "English (Britain)": "en-GB", "Spanish":"es-ES",
                             "French (Canada)":"fr-CA", "French (France)":"fr-FR", "German":"de-DE",
                             "Hebrew":"he-IL", "Italian":"it-IT", "Japanese":"ja-JP", "Korean":"ko-KR",
-                            "Chinese (Mandarin)":"zh-CN", "Chinese (Cantonese)":"zh-YUE", "Arabic":"ar-SA",
+                            "Chinese (Mandarin)":"zh-CN", "Chinese (Cantonese)":"zh-HK", "Arabic":"ar-SA",
                             "Czech":"cs-CZ", "Danish":"da-DK", "Dutch (Belgium)":"nl-BE", "Dutch (Netherlands)":"nl-NL",
                             "Finnish":"fi-FI", "Greek":"el-GR", "Hindi":"hi-IN", "Hungarian":"hu-HU", "Indonesian":"id-ID",
                             "Norwegian":"nb-NO", "Polish":"pl-PL", "Portuguese (Brazil)":"pt-BR", "Portuguese (Portugal)":"pt-PT",
@@ -101,10 +101,11 @@
   <template>
     <link rel="stylesheet" href="component.css"></link>
     <p style="text-align: {{textalign}}; font-size: {{fontsize}}px; background: {{backgroundcolor}}; color: {{textcolor}}" id="textBox">{{text}}</p>
-        <div id="wrapper" on-ceci-pressdown="{{speak}}" class="wrapper">
+    <div id="wrapper" on-ceci-pressdown="{{speak}}" class="wrapper">
       <div class="label">
         <div class="text">Press to hear</div>
       </div>
+    </div>
     <shadow></shadow>
   </template>
   <script>
@@ -133,9 +134,9 @@
       },
       highlightWord: function(e) {
         innerHTML = this.$.container.innerHTML =  this.text;
-        if(this.state != "stopped"){
+        if(this.state !== "stopped"){
           this.$.prevIndex = this.$.curIndex;
-          if(e.charIndex === 0) {
+          if( (e.charIndex === 0) ) {
             this.$.curIndex = this.text.length;
           }else{
             this.$.curIndex = e.charIndex;
@@ -159,10 +160,10 @@
       },
       speak: function(){
         if ( ('speechSynthesis' in window) ) {
-          if(this.state == "paused") {
+          if(this.state === "paused") {
             speechSynthesis.resume();
             this.state = "speaking";
-          } else if(this.state == "stopped") {
+          } else if(this.state === "stopped") {
             this.$.utterance.text = this.text;
             this.$.utterance.lang = this.$.language;
             speechSynthesis.speak(this.$.utterance);
@@ -171,7 +172,7 @@
         }
       },
       pause : function(){
-        if(this.state == "speaking") {
+        if(this.state === "speaking") {
           speechSynthesis.pause();
           this.state = "paused";
         }

@@ -3,11 +3,9 @@
     <title>Test Speech</title>
 
     <script>
-      function speak() {
-        var message = new SpeechSynthesisUtterance(‘Hello World!’);
-
-        window.speechSynthesis.speak(message);
-     }
+      window.speechSynthesis.onvoiceschanged = function() {
+          console.log(window.speechSynthesis.getVoices());
+      };
     </script>
   </head>
 
